@@ -1,6 +1,7 @@
 package game.scenes;
 
 import core.Game;
+import core.Types;
 import core.scene.Scene;
 import game.world.World;
 import kha.Assets;
@@ -19,17 +20,19 @@ class GameScene extends Scene {
 
     override function update (delta:Float) {
         if (Game.keys.justPressed(KeyCode.Left)) {
-            world.player.x--;
+            world.tryMovePlayer(Dir.Left);
         }
         if (Game.keys.justPressed(KeyCode.Right)) {
-            world.player.x++;
+            world.tryMovePlayer(Dir.Right);
         }
         if (Game.keys.justPressed(KeyCode.Up)) {
-            world.player.y--;
+            world.tryMovePlayer(Dir.Up);
         }
         if (Game.keys.justPressed(KeyCode.Down)) {
-            world.player.y++;
+            world.tryMovePlayer(Dir.Down);
         }
+
+        world.step();
 
         super.update(delta);
     }

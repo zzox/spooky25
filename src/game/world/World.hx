@@ -1,20 +1,21 @@
 package game.world;
 
+import core.Types;
 import game.world.Grid;
 
-enum GridItem{
+enum GridItem {
     None;
     Wall;
 }
 
-class Actor {
-    public var x:Int;
-    public var y:Int;
-
-    public function new (x:Int, y:Int) {
-        this.x = x;
-        this.y = y;
-    }
+typedef Element = {
+//   var type:SpellType;
+  var x:Int;
+  var y:Int;
+  var time:Int;
+  var from:Actor;
+  var path:Array<IntVec2>;
+  var damaged:Array<Actor>;
 }
 
 class World {
@@ -27,7 +28,79 @@ class World {
         grid = makeGrid(15, 15, None);
 
         player = new Actor(7, 7);
+        player.isPlayer = true;
 
         actors.push(player);
+    }
+
+    public function step () {
+        for (a in actors) updateActor(a);
+    }
+
+    function updateActor (actor:Actor) {
+        actor.stateTime--;
+        if (actor.stateTime > 0) return;
+
+        if (actor.state == Spell) {
+            actor.state = Wait;
+        }
+
+        if (actor.state == Prespell) {
+            doSpell(actor);
+        }
+
+        if (actor.isPlayer) {
+            updatePlayer(actor);
+            return;
+        }
+
+        // TODO: target can by enemies when we have teammates
+        final targets = getPlayers();
+
+        if (actor.state != Wait) return;
+
+        if (actor.behavior == Aggro) {
+            tryAggro(actor, targets);
+        } else {
+            throw 'No behavior';
+        }
+    }
+
+    inline function updatePlayer (player:Actor) {
+        if (player.state == Wait) {
+            // player.stateTime--;
+        }
+    }
+
+    function tryAggro (actor:Actor, targets:Array<Actor>) {}
+
+    function trySpell (actor:Actor) {}
+    function doSpell (actor:Actor) {}
+
+    public function tryMovePlayer (dir:Dir) {
+        var xPos = player.x;
+        var yPos = player.y;
+
+        switch (dir) {
+            case Left: xPos--;
+            case Right: xPos++;
+            case Up: yPos--;
+            case Down: yPos++;
+        }
+
+        final gi = getGridItem(grid, xPos, yPos);
+
+        if (gi != null && gi == None) {
+            player.x = xPos;
+            player.y = yPos;
+        }
+    }
+
+    function getEnemies ():Array<Actor> {
+        return actors.filter(a -> !a.isPlayer);
+    }
+
+    function getPlayers ():Array<Actor> {
+        return [player];
     }
 }

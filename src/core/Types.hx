@@ -37,3 +37,10 @@ class Vec2 {
         this.y = y;
     }
 }
+
+enum Dir {
+    Left;
+    Right;
+    Up;
+    Down;
+}
