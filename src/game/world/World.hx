@@ -102,6 +102,8 @@ class World {
         actor.stateTime = 60;
         actor.state = Prespell;
         // actor.attackPos = new IntVec2(x, y);
+        // not needed
+        actor.path = null;
     }
 
     function doSpell (actor:Actor) {
@@ -112,18 +114,21 @@ class World {
     function tryMoveActor (actor:Actor, targetX:Int, targetY:Int) {
         final path = pathfind(makeMap(actor), new IntVec2(actor.x, actor.y), new IntVec2(targetX, targetY), Diagonal, true);
         if (path == null) {
-            throw 'No Path';
+            trace('No Path');
             // TODO: stateTime of 1
-            // actor.bd.stateTime = 60
-            // return;
+            actor.stateTime = 60;
+            return;
         }
 
         final items = clonePath(path);
 
-        final isDiagonal = actor.x != items[0].x && actor.y != items[0].y;
+        actor.path = items.slice(0, 5);
+        final isDiagonal = isMoveDiagonal(actor.x, actor.y, items[0].x, items[0].y);
 
-        actor.x = items[0].x;
-        actor.y = items[0].y;
+        actor.facing = findActorFacing(actor.facing, actor.x, actor.y, items[0].x, items[0].y);
+
+        // move actor code
+        moveActor(actor, items[0].x, items[0].y);
 
         // final time = Math.floor((256 - actor.bd.stats.Speed) / 10)
         final speed = 25;
@@ -147,9 +152,31 @@ class World {
         final actor = actorAt(xPos, yPos);
 
         if (gi != null && gi == None && actor == null) {
-            player.x = xPos;
-            player.y = yPos;
+            player.facing = findActorFacing(player.facing, player.x, player.y, xPos, yPos);
+            moveActor(player, xPos, yPos);
         }
+    }
+
+    inline function moveActor (actor:Actor, toX:Int, toY:Int) {
+        actor.x = toX;
+        actor.y = toY;
+    }
+
+    function findActorFacing (facing:Dir, fromX:Int, fromY:Int, toX:Int, toY:Int):Dir {
+        // if (false /*isMoveDiagonal(fromX, fromY, toX, toY)*/) {
+        //     return Left;
+        // }
+
+        if (fromX == toX) {
+            return toY < fromY ? Up : Down;
+        } else if (fromY == toY) {
+            return toX < fromX ? Left : Right;
+        } else {/** is diagonal **/}
+        return facing;
+    }
+
+    inline function isMoveDiagonal (fromX:Int, fromY:Int, toX:Int, toY:Int) {
+        return fromX != toX && fromY != toY;
     }
 
     function actorAt (x:Int, y:Int):Null<Actor> {

@@ -61,6 +61,26 @@ class GameScene extends Scene {
                 (tileIndex * 16) % image.width, Math.floor(tileIndex / 16) * 16,
                 16, 16
             );
+
+            var xPos = actor.x;
+            var yPos = actor.y;
+
+            if (actor.facing == Left) {
+                xPos--;
+            } else if (actor.facing == Right) {
+                xPos++;
+            } else if (actor.facing == Up) {
+                yPos--;
+            } else if (actor.facing == Down) {
+                yPos++;
+            }
+
+            g2.drawSubImage(
+                image,
+                leftEdge + xPos * 17, yPos * 17,
+                0, 0,
+                17, 17
+            );
         }
 
         g2.end();

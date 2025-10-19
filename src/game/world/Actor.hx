@@ -1,5 +1,8 @@
 package game.world;
 
+import core.Types.Dir;
+import core.Types.IntVec2;
+
 enum ActorState {
     Wait; // also move
     Prespell;
@@ -25,6 +28,11 @@ class Actor {
     public var state:ActorState = Wait;
     public var stateTime:Int;
     public var behavior:ActorBehavior = Aggro;
+
+    public var facing:Dir = Down;
+
+    // just for show, should be limited to a length of 5
+    public var path:Null<Array<IntVec2>>;
 
     public function new (x:Int, y:Int) {
         this.x = x;
