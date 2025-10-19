@@ -1,7 +1,12 @@
 package game.world;
 
 import core.Types;
+import core.util.Util.distanceBetween;
+import game.util.Pathfind;
+import game.util.Utils;
 import game.world.Grid;
+
+final SQRT2 = Math.sqrt(2);
 
 enum GridItem {
     None;
@@ -30,7 +35,11 @@ class World {
         player = new Actor(7, 7);
         player.isPlayer = true;
 
+        final ghost = new Actor(1, 1);
+        ghost.stateTime = 10;
+
         actors.push(player);
+        actors.push(ghost);
     }
 
     public function step () {
@@ -54,11 +63,12 @@ class World {
             return;
         }
 
+        if (actor.state != Wait) return;
+
         // TODO: target can by enemies when we have teammates
         final targets = getPlayers();
 
-        if (actor.state != Wait) return;
-
+        // everyone is aggro for now
         if (actor.behavior == Aggro) {
             tryAggro(actor, targets);
         } else {
@@ -68,14 +78,57 @@ class World {
 
     inline function updatePlayer (player:Actor) {
         if (player.state == Wait) {
+            // TODO: get or use buffers
             // player.stateTime--;
         }
     }
 
-    function tryAggro (actor:Actor, targets:Array<Actor>) {}
+    function tryAggro (actor:Actor, targets:Array<Actor>) {
+        // TODO: move contents of method in here as we measure distanceBetween in `findNearest`
+        final nearest = findNearest(actor.x, actor.y, targets);
+        if (nearest == null) {
+            throw 'No Nearest';
+        }
 
-    function trySpell (actor:Actor) {}
-    function doSpell (actor:Actor) {}
+        if (distanceBetween(actor.x, actor.y, nearest.x, nearest.y) < 1.5) {
+            trySpell(actor, nearest.x, nearest.y);
+        } else {
+            tryMoveActor(actor, nearest.x, nearest.y);
+        }
+    }
+
+    function trySpell (actor:Actor, x:Int, y:Int) {
+        actor.stateTime = 60;
+        actor.state = Prespell;
+        // actor.attackPos = new IntVec2(x, y);
+    }
+
+    function doSpell (actor:Actor) {
+        actor.stateTime = 60;
+        actor.state = Spell;
+    }
+
+    function tryMoveActor (actor:Actor, targetX:Int, targetY:Int) {
+        final path = pathfind(makeMap(actor), new IntVec2(actor.x, actor.y), new IntVec2(targetX, targetY), Diagonal, true);
+        if (path == null) {
+            throw 'No Path';
+            // TODO: stateTime of 1
+            // actor.bd.stateTime = 60
+            // return;
+        }
+
+        final items = clonePath(path);
+
+        final isDiagonal = actor.x != items[0].x && actor.y != items[0].y;
+
+        actor.x = items[0].x;
+        actor.y = items[0].y;
+
+        // final time = Math.floor((256 - actor.bd.stats.Speed) / 10)
+        final speed = 25;
+        final time = Math.floor(348 / speed);
+        actor.stateTime = isDiagonal ? Math.floor(time * SQRT2) : time;
+    }
 
     public function tryMovePlayer (dir:Dir) {
         var xPos = player.x;
@@ -90,9 +143,31 @@ class World {
 
         final gi = getGridItem(grid, xPos, yPos);
 
-        if (gi != null && gi == None) {
+        final actor = actorAt(xPos, yPos);
+
+        if (gi != null && gi == None && actor == null) {
             player.x = xPos;
             player.y = yPos;
+        }
+    }
+
+    function actorAt (x:Int, y:Int):Null<Actor> {
+        for (a in actors) {
+            if (a.x == x && a.y == y) return a;
+        }
+
+        return null;
+    }
+
+    // pass in the actor's exception
+    function makeMap (actor:Actor) {
+        return {
+            width: 15,
+            height: 15,
+            items: mapGIItems(makeGrid(15, 15, 0), (x, y, _) -> {
+                final tile = getGridItem(grid, x, y);
+                return tile == None && (actorAt(x, y) == null || actorAt(x, y) == actor) ? 1 : 0;
+            })
         }
     }
 

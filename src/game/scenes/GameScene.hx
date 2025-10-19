@@ -35,6 +35,11 @@ class GameScene extends Scene {
         world.step();
 
         super.update(delta);
+
+        // TODO: remove
+        if (Game.keys.justPressed(KeyCode.R)) {
+            game.changeScene(new GameScene());
+        }
     }
 
     final leftEdge = 64;
@@ -45,11 +50,18 @@ class GameScene extends Scene {
         // g2.color = Math.floor(alpha * 256) * 0x1000000 + color;
         g2.color = 256 * 0x1000000 + 0xffffffff;
 
-        final tileIndex = 32;
         final image = Assets.images.spook25sprites;
 
-        g2.drawSubImage(image, leftEdge + 1 + world.player.x * 17, 1 + world.player.y * 17, (tileIndex * 16) % image.width, Math.floor(tileIndex / 16) * 16, 16, 16);
-        trace(leftEdge + 1 + world.player.x * 17, 1 + world.player.y * 17, (tileIndex * 16) % image.width, Math.floor(tileIndex / 16) * 16, 16, 16);
+        for (actor in world.actors) {
+            final tileIndex = actor.isPlayer ? 32 : 48;
+
+            g2.drawSubImage(
+                image,
+                leftEdge + 1 + actor.x * 17, 1 + actor.y * 17,
+                (tileIndex * 16) % image.width, Math.floor(tileIndex / 16) * 16,
+                16, 16
+            );
+        }
 
         g2.end();
     }
