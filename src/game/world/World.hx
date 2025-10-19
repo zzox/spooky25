@@ -1,7 +1,7 @@
 package game.world;
 
 import core.Types;
-import core.util.Util.distanceBetween;
+import core.util.Util;
 import game.util.Pathfind;
 import game.util.Utils;
 import game.world.Grid;
@@ -34,12 +34,13 @@ class World {
 
         player = new Actor(7, 7);
         player.isPlayer = true;
-
-        final ghost = new Actor(1, 1);
-        ghost.stateTime = 10;
-
         actors.push(player);
-        actors.push(ghost);
+
+        for (i in 0...6) {
+            final ghost = new Actor(3 + i, 1);
+            ghost.stateTime = 10;
+            actors.push(ghost);
+        }
     }
 
     public function step () {
@@ -58,12 +59,12 @@ class World {
             doSpell(actor);
         }
 
+        if (actor.state != Wait) return;
+
         if (actor.isPlayer) {
             updatePlayer(actor);
             return;
         }
-
-        if (actor.state != Wait) return;
 
         // TODO: target can by enemies when we have teammates
         final targets = getPlayers();

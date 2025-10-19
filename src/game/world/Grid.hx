@@ -28,9 +28,10 @@ function mapGIItems<T, TT> (grid:Grid<T>, callback:(x:Int, y:Int, item:T) -> TT)
     //     callback = (x:Int, y:Int, item:T) -> { return cast(item); };
     // }
 
+    // ATTN: y and x order need to be flipped here to be gotten with `grid.items[x + y * grid.width]`
     final items = [];
-    for (x in 0...grid.width) {
-        for (y in 0...grid.height) {
+    for (y in 0...grid.height) {
+        for (x in 0...grid.width) {
             items.push(callback(x, y, grid.items[x + y * grid.width]));
         }
     }
